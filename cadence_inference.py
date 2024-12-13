@@ -8,7 +8,7 @@ import queue
 
 def wifi_connect():
     # Set up the UDP server
-    server_ip = "192.168.203.72"  # Replace with your computer's IP address if different
+    server_ip = "192.168.22.72"  # Replace with your computer's IP address if different
     server_port = 12345  # Must match the port used in the phone's code
 
     # Create the socket

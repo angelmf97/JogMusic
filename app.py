@@ -14,6 +14,7 @@ class RealTimeAudioPlayer:
         print(sd.query_devices())
         sd.default.device = 6
         self.root = root
+
         self.cadence_queue = cadence_queue
         self.bluetooth_queue = bluetooth_queue
         self.root.title("Real-Time Audio Speed Control")
@@ -43,6 +44,9 @@ class RealTimeAudioPlayer:
 
         self.warmed_hr_label = tk.Label(root, text="Warmed HR: Unknown")
         self.warmed_hr_label.pack(pady=5)
+
+        self.current_hr_label = tk.Label(root, text="Current HR: Unknown")
+        self.current_hr_label.pack(pady=5)
         
         self.mode_label = tk.Label(root, text="Current Mode: warmup")
         self.mode_label.pack(pady=10)
@@ -150,7 +154,6 @@ class RealTimeAudioPlayer:
                     print("No HR data received.")
                     continue
         
-                print("HR Data: ", hr_data)
                 resting_hr.append(hr_data)
                 resting_hr = resting_hr[-5:]
                 self.resting_hr = sum(resting_hr) / 5
@@ -163,15 +166,15 @@ class RealTimeAudioPlayer:
         return
     
     def workout_mode(self, cadence_avg, hr_data):
-        if hr_data < self.hr_target:
-            new_speed = (cadence_avg / self.song_bpm) + 2
+        if hr_data < self.hr_target and cadence_avg < 180:
+            new_speed = (cadence_avg + 5) / self.song_bpm
         else:
             new_speed = cadence_avg / self.song_bpm
         return new_speed
     
     def slowdown_mode(self, cadence_avg, hr_data):
         if hr_data > self.resting_hr:
-            new_speed = (cadence_avg / self.song_bpm) - 2
+            new_speed = (cadence_avg - 5) / self.song_bpm
         else:
             new_speed = cadence_avg / self.song_bpm
         return new_speed
@@ -191,6 +194,7 @@ class RealTimeAudioPlayer:
                 
                 try:
                     hr_data = self.bluetooth_queue.get_nowait()
+                    self.current_hr_label.config(text=f"Current HR: {hr_data}")
                 except queue.Empty:
                     pass
                 
@@ -269,6 +273,8 @@ class RealTimeAudioPlayer:
 # Initialize the cadence queue
 cadence_queue = queue.Queue()
 sock = cadence_inference.wifi_connect()
+
+
 
 # Start the cadence thread
 threading.Thread(target=cadence_inference.main, args = [sock, cadence_queue], daemon=True).start()
